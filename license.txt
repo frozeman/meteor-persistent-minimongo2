@@ -1,5 +1,5 @@
 ===================================================
-BrowserCollection is licensed under the MIT License
+Licensed under the MIT License
 ===================================================
 
 Copyright (C) 2013 Jeff Mitchell / 3dotO, Inc.

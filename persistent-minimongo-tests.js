@@ -9,8 +9,8 @@ var data = [
 // amplify has stored the correct data.
 
 Tinytest.add('Local Persist - Insert Data', function(test) {
-  var testCollection = new Meteor.Collection(null);
-  var testObserver = new LocalPersist(testCollection, 'Test-Collection');
+  var testCollection = new Mongo.Collection(null);
+  var testObserver = new PersistentMinimongo(testCollection);
 
   data.forEach(function (doc) {
     testCollection.insert(doc);
@@ -25,8 +25,8 @@ Tinytest.add('Local Persist - Insert Data', function(test) {
 });
 
 Tinytest.add('Local Persist - Retrieve Data', function(test) {
-  var testCollection = new Meteor.Collection(null);
-  var testObserver = new LocalPersist(testCollection, 'Test-Collection');
+  var testCollection = new Mongo.Collection(null);
+  var testObserver = new PersistentMinimongo(testCollection);
 
   // right number of adds?
   test.equal(testObserver._getStats().added, data.length);
@@ -39,8 +39,8 @@ Tinytest.add('Local Persist - Retrieve Data', function(test) {
 });
 
 Tinytest.add('Local Persist - Remove Data', function(test) {
-  var testCollection = new Meteor.Collection(null);
-  var testObserver = new LocalPersist(testCollection, 'Test-Collection');
+  var testCollection = new Mongo.Collection(null);
+  var testObserver = new PersistentMinimongo(testCollection);
 
   // right number of adds?
   test.equal(testObserver._getStats().added, data.length);

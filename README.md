@@ -1,17 +1,19 @@
-# Meteor Local Persist Package
+# Meteor persistent minimongo
 
 Simple client-side observer class that provides persistence for Meteor Collections using browser storage via Amplify.js. Collections are reactive across browser tabs.
 
+*based on a package by Jeff Mitchel https://github.com/jeffmitchel/meteor-local-persist*
+
 ## Installation:
-1. `npm install -g meteorite` (if not already installed)
-2. `mrt add local-persist`
+`$ meteor add frozeman:persistent-minimongo`
+
 
 ## Documentation:
 
 ### Constructor:
 
 ```
-LocalPersist(collection, key);
+PersistentMinimongo(collection, key);
 ```
 
 Collection is the Meteor Collection to be persisted. Key is a string value used as the access key for browser storage.
@@ -32,7 +34,7 @@ if (Meteor.isClient) {
     var shoppingCart = new Meteor.Collection(null);
 
     // create a local persistence observer
-    var shoppingCartObserver = new LocalPersist(shoppingCart, 'Shopping-Cart');
+    var shoppingCartObserver = new PersistentMinimongo(shoppingCart, 'Shopping-Cart');
 
     // create a handlebars helper to fetch the data
     Handlebars.registerHelper("shoppingCartItems", function () {
@@ -80,6 +82,6 @@ if (Meteor.isClient) {
 
 - This is a simple implementation that keeps an identical copy of the collection's data in browser storage. While not especially space efficient, it does preserve all of the Meteor.Collection reactive goodness.
 
-- The cross-tab reactvity implementation is naive and will resync all LocalPersist instances when a browser storage event is fired.
+- The cross-tab reactvity implementation is naive and will resync all PersistentMinimongo instances when a browser storage event is fired.
 
 - See http://amplifyjs.com/api/store/#storagetypes for information about how data is stored in the browser.
