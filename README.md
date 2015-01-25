@@ -13,28 +13,38 @@ Simple client-side observer class that provides persistence for Meteor Collectio
 ### Constructor:
 
 ```
-PersistentMinimongo(collection, key);
+new PersistentMinimongo(collection);
 ```
 
-Collection is the Meteor Collection to be persisted. Key is a string value used as the access key for browser storage.
+Collection is the Meteor Collection to be persisted.
 
 ### Methods:
 
-```
-  None.
+```js
+
+var myPersistentColleciton = new PersistentMinimongo(collection);
+
+// Refreshes the collections from localstorage
+myPersistentColleciton.refresh()
+
+// Gets the current size of the localstorage in MB
+myPersistentColleciton.localStorageSize()
+
+// Will check if the current size of the localstorage is larger then 4.8 MB, if so it will remove the 50 latest entries of the collection.
+myPersistentColleciton.capCollection()
 ```
 
 ## Example:
 
 Implement a simple shopping cart as a local collection.
 
-```javascript
+```js
 if (Meteor.isClient) {
-    // create a local collection
-    var shoppingCart = new Meteor.Collection(null);
+    // create a local collection, 
+    var shoppingCart = new Meteor.Collection('shopping-cart', {connection: null});
 
     // create a local persistence observer
-    var shoppingCartObserver = new PersistentMinimongo(shoppingCart, 'Shopping-Cart');
+    var shoppingCartObserver = new PersistentMinimongo(shoppingCart);
 
     // create a handlebars helper to fetch the data
     Handlebars.registerHelper("shoppingCartItems", function () {
