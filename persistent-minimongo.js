@@ -163,20 +163,22 @@ PersistentMinimongo.prototype = {
     */
     localStorageSize: function() {
 
-      // function toSizeMB(info) {
-      //   info.size = toMB(info.size).toFixed(2) + ' MB';
-      //   return info;
-      // }
+        // function toSizeMB(info) {
+        //   info.size = toMB(info.size).toFixed(2) + ' MB';
+        //   return info;
+        // }
 
-      // var sizes = Object.keys(localStorage).map(toSize).map(toSizeMB);
-      // console.table(sizes);
+        // var sizes = Object.keys(localStorage).map(toSize).map(toSizeMB);
+        // console.table(sizes);
 
-      var size = 0;
-      _.each(Object.keys(localStorage), function(key){
-        size += localStorage[key].length * 2 / 1024 / 1024;
-      });
-      
-      return size;
+        var size = 0;
+        if(localStorage) {
+            _.each(Object.keys(localStorage), function(key){
+                size += localStorage[key].length * 2 / 1024 / 1024;
+            });
+        }
+
+        return size;
     },
     /**
     Check if the localstorage is to big and reduce the current collection by 50 items
