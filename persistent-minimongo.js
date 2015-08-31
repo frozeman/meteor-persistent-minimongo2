@@ -39,14 +39,16 @@ PersistentMinimongo = function (collection, dbname) {
     self.col = collection;
     self.cur = self.col.find({});
     self.stats = { added: 0, removed: 0, changed: 0 };
+    self.list = [];
 
     persisters.push(self);
 
-    localforage.config({
-        name        : 'persistent-minimongo2',
+    // config
+    self.store = localforage.createInstance({
+        name        : 'persistent-minimongo2-' + (dbname || 'db'),
         version     : 1.0,
         // size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
-        storeName   : dbname || 'minimongo',
+        storeName   : 'minimongo',
         description : 'frozeman:persistent-minimongo2 data store'
     });
 
@@ -57,71 +59,56 @@ PersistentMinimongo = function (collection, dbname) {
         added: function (doc) {
 
             // Check if the localstorage is to big and reduce the current collection by 50 items
-            if(localforage.driver() === 'localStorageWrapper')
+            if(self.store.driver() === 'localStorageWrapper')
                 self.capCollection();
 
-            // get or initialize tracking list
-            localforage.getItem(self.key, function(err, list) {
-                if(!err) {
 
-                    if (! list)
-                        list = [];
+            // add document id to tracking list and store
+            if (! _.contains(self.list, doc._id)) {
+                self.list.push(doc._id);
 
-                    // add document id to tracking list and store
-                    if (! _.contains(list, doc._id)) {
-                        list.push(doc._id);
+                self.store.setItem(self.key, self.list, function(err, value) {
+                    if(!err) {
 
-                        localforage.setItem(self.key, list, function(err, value) {
+                        // store copy of document into local storage, if not already there
+                        var key = self._makeDataKey(doc._id);
+                        self.store.setItem(key, doc, function(err, value) {
                             if(!err) {
-
-                                // store copy of document into local storage, if not already there
-                                var key = self._makeDataKey(doc._id);
-                                localforage.setItem(key, doc, function(err, value) {
-                                    if(!err) {
-                                        ++self.stats.added;
-                                    }
-                                });
+                                ++self.stats.added;
                             }
                         });
                     }
-
-                }
-            });
+                });
+            }
         },
 
         removed: function (doc) {
-            localforage.getItem(self.key, function(err, list) {
+            // if not in list, nothing to do
+            if(! _.contains(self.list, doc._id))
+                return;
+
+            // remove from list
+            self.list = _.without(self.list, doc._id);
+
+            // remove document copy from local storage
+            self.store.removeItem(self._makeDataKey(doc._id), function(err) {
                 if(!err) {
 
-                    // if not in list, nothing to do
-                    if(! _.contains(list, doc._id))
-                        return;
+                    // if tracking list is empty, delete; else store updated copy
+                    if(self.list.length === 0) {
+                        self.store.removeItem(self.key, function(){});
+                    } else {
+                        self.store.setItem(self.key, self.list, function(){});
+                    }
 
-                    // remove from list
-                    list = _.without(list, doc._id);
-
-                    // remove document copy from local storage
-                    localforage.removeItem(self._makeDataKey(doc._id), function(err) {
-                        if(!err) {
-
-                            // if tracking list is empty, delete; else store updated copy
-                            if(list.length === 0) {
-                                localforage.removeItem(self.key, function(){});
-                            } else {
-                                localforage.setItem(self.key, list, function(){});
-                            }
-
-                            ++self.stats.removed;
-                        }
-                    });
-
+                    ++self.stats.removed;
                 }
             });
         },
 
         changed: function (newDoc, oldDoc) {
             // update document in local storage
-            localforage.setItem(self._makeDataKey(newDoc._id), newDoc, function(err, value) {
+            self.store.setItem(self._makeDataKey(newDoc._id), newDoc, function(err, value) {
                 if(!err) {
                     ++self.stats.changed;
                 }
@@ -149,9 +136,10 @@ PersistentMinimongo.prototype = {
     */
     refresh: function (init) {
         var self = this;
-        localforage.getItem(self.key, function(err, list) {
+        self.store.getItem(self.key, function(err, list) {
             if(!err) {
 
+                self.list = list || [];
                 self.stats.added = 0;
 
                 if (!! list) {
@@ -159,7 +147,7 @@ PersistentMinimongo.prototype = {
                     var count = 0;
                     var newList = [];
                     _.each(list, function (id) {
-                        localforage.getItem(self._makeDataKey(id), function(err, doc) {
+                        self.store.getItem(self._makeDataKey(id), function(err, doc) {
                             if(!err) {
                                 if(!! doc) {
                                     var id = doc._id;
@@ -178,6 +166,8 @@ PersistentMinimongo.prototype = {
                         if(count >= length) {
                             clearInterval(intervalId);
 
+                            self.list = newList;
+
                             // if not initializing, check for deletes
                             if(! init) {
                             
@@ -191,13 +181,13 @@ PersistentMinimongo.prototype = {
                             if(init && length !== newList.length) {
                                 // if tracking list is empty, delete; else store updated copy
                                 if(newList.length === 0) {
-                                    localforage.removeItem(self.key, function(){});
+                                    self.store.removeItem(self.key, function(){});
                                 } else {
-                                    localforage.setItem(self.key, newList, function(){});
+                                    self.store.setItem(self.key, newList, function(){});
                                 }
                             }
                         }
-                    }, 10);
+                    }, 1);
 
                 }
             }
