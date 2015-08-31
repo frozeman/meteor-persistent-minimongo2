@@ -9,13 +9,13 @@ Simple client-side observer class that provides persistence for Meteor Collectio
 ## Notes
 
 - If you UPDATE from 1.x.x, be aware that you will loose your stored data, as its now stored in the browsers indexedDB if available.
-- This is a simple implementation that keeps an identical copy of the collection's data in browser storage. While not especially space efficient, it does preserve all of the Meteor.Collection reactive goodness.
 - The cross-tab reactvity is gone since version 2.0.0, as its not using localstorage anymore !!
+- This is a simple implementation that keeps an identical copy of the collection's data in browser storage. While not especially space efficient, it does preserve all of the Meteor.Collection reactive goodness.
 
 
 ## Installation
 
-`$ meteor add frozeman:persistent-minimongo`
+`$ meteor add frozeman:persistent-minimongo2`
 
 
 ## Documentation
@@ -27,6 +27,9 @@ new PersistentMinimongo(collection, 'myAppName');
 ```
 
 `collection` is the Meteor Collection to be persisted.
+
+The last parameter is the apps name and should be used to identifiy your persisted collections inside your storage.
+Default is `minimongo`
 
 ### Methods:
 
