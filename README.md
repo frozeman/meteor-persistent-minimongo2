@@ -1,37 +1,51 @@
 # Meteor persistent minimongo
 
-Simple client-side observer class that provides persistence for Meteor Collections using browser storage via Amplify.js. Collections are reactive across browser tabs.
+Simple client-side observer class that provides persistence for Meteor Collections using browser storage via [localforage](https://github.com/mozilla/localForage).
 
-*based on a package by Jeff Mitchel https://github.com/jeffmitchel/meteor-local-persist*
+[localforage](https://github.com/mozilla/localForage) uses the browsers `indexedDB`, if not available tries `webSQL` and as last option uses `localstorage`.
 
-## Installation:
+*package based on [meteor-local-persist](https://github.com/jeffmitchel/meteor-local-persist) by Jeff Mitchel*
+
+## Notes
+
+- If you UPDATE from 1.x.x, be aware that you will loose your stored data, as its now stored in the browsers indexedDB if available.
+- This is a simple implementation that keeps an identical copy of the collection's data in browser storage. While not especially space efficient, it does preserve all of the Meteor.Collection reactive goodness.
+- The cross-tab reactvity is gone since version 2.0.0, as its not using localstorage anymore !!
+
+
+## Installation
+
 `$ meteor add frozeman:persistent-minimongo`
 
 
-## Documentation:
+## Documentation
 
-### Constructor:
+### Constructor
 
 ```
-new PersistentMinimongo(collection);
+new PersistentMinimongo(collection, 'myAppName');
 ```
 
-Collection is the Meteor Collection to be persisted.
+`collection` is the Meteor Collection to be persisted.
 
 ### Methods:
 
 ```js
 
-var myPersistentColleciton = new PersistentMinimongo(collection);
+var myPersistentCollection = new PersistentMinimongo(collection, 'myAppName');
 
-// Refreshes the collections from localstorage
-myPersistentColleciton.refresh()
+// Refreshes the collections from the storage
+myPersistentCollection.refresh()
 
+// If you ever need to clear you storage use
+localforage.clear();
+
+// The below is only interesting if your brower doesn't support indexedDB or webSQL:
 // Gets the current size of the localstorage in MB
-myPersistentColleciton.localStorageSize()
+myPersistentCollection.localStorageSize()
 
 // Will check if the current size of the localstorage is larger then 4.8 MB, if so it will remove the 50 latest entries of the collection.
-myPersistentColleciton.capCollection()
+myPersistentCollection.capCollection()
 ```
 
 ## Example:
@@ -44,10 +58,10 @@ if (Meteor.isClient) {
     var shoppingCart = new Meteor.Collection('shopping-cart', {connection: null});
 
     // create a local persistence observer
-    var shoppingCartObserver = new PersistentMinimongo(shoppingCart);
+    var shoppingCartObserver = new PersistentMinimongo(shoppingCart, 'myShoppingApp');
 
     // create a handlebars helper to fetch the data
-    Handlebars.registerHelper("shoppingCartItems", function () {
+    Template.registerHelper("shoppingCartItems", function () {
       return shoppingCart.find();
     });
 
@@ -87,11 +101,3 @@ if (Meteor.isClient) {
   </table>
 </template>
 ```
-
-## Notes:
-
-- This is a simple implementation that keeps an identical copy of the collection's data in browser storage. While not especially space efficient, it does preserve all of the Meteor.Collection reactive goodness.
-
-- The cross-tab reactvity implementation is naive and will resync all PersistentMinimongo instances when a browser storage event is fired.
-
-- See http://amplifyjs.com/api/store/#storagetypes for information about how data is stored in the browser.

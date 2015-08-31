@@ -29,7 +29,8 @@ which wanted to add a new entry, by 50 entries.
 var trimCollectionBy = 50;
 
 
-PersistentMinimongo = function (collection) {
+
+PersistentMinimongo = function (collection, dbname) {
     var self = this;
     if (! (self instanceof PersistentMinimongo))
             throw new Error('use "new" to construct a PersistentMinimongo');
@@ -41,6 +42,14 @@ PersistentMinimongo = function (collection) {
 
     persisters.push(self);
 
+    localforage.config({
+        name        : 'persistent-minimongo',
+        version     : 1.0,
+        // size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
+        storeName   : dbname || 'minimongo',
+        description : 'frozeman:persistent-minimongo data store'
+    });
+
     // Meteor.startup(function () {
         // load from storage
         self.refresh(true);
@@ -49,51 +58,75 @@ PersistentMinimongo = function (collection) {
             added: function (doc) {
 
                 // Check if the localstorage is to big and reduce the current collection by 50 items
-                self.capCollection();
+                if(localforage.driver() === 'localStorageWrapper')
+                    self.capCollection();
 
                 // get or initialize tracking list
-                var list = amplify.store(self.key);
-                if (! list)
-                    list = [];
+                localforage.getItem(self.key, function(err, list) {
+                    if(!err) {
 
-                // add document id to tracking list and store
-                if (! _.contains(list, doc._id)) {
-                    list.push(doc._id);
-                    amplify.store(self.key, list);
-                }
+                        if (! list)
+                            list = [];
 
-                // store copy of document into local storage, if not already there
-                var key = self._makeDataKey(doc._id);
-                if(! amplify.store(key)) {
-                    amplify.store(key, doc);
-                }
+                        // add document id to tracking list and store
+                        if (! _.contains(list, doc._id)) {
+                            list.push(doc._id);
 
-                ++self.stats.added;
+                            localforage.setItem(self.key, list, function(err, value) {
+                                if(!err) {
+
+                                    // store copy of document into local storage, if not already there
+                                    var key = self._makeDataKey(doc._id);
+                                    localforage.setItem(key, doc, function(err, value) {
+                                        if(!err) {
+                                            ++self.stats.added;
+                                        }
+                                    });
+                                }
+                            });
+                        }
+
+                    }
+                });
             },
 
             removed: function (doc) {
-                var list = amplify.store(self.key);
+                localforage.getItem(self.key, function(err, list) {
+                    if(!err) {
 
-                // if not in list, nothing to do
-                if(! _.contains(list, doc._id))
-                    return;
+                        // if not in list, nothing to do
+                        if(! _.contains(list, doc._id))
+                            return;
 
-                // remove from list
-                list = _.without(list, doc._id);
+                        // remove from list
+                        list = _.without(list, doc._id);
 
-                // remove document copy from local storage
-                amplify.store(self._makeDataKey(doc._id), null);
+                        // remove document copy from local storage
+                        localforage.removeItem(self._makeDataKey(doc._id), function(err) {
+                            if(!err) {
 
-                // if tracking list is empty, delete; else store updated copy
-                amplify.store(self.key, list.length === 0 ? null : list);
+                                // if tracking list is empty, delete; else store updated copy
+                                if(list.length === 0) {
+                                    localforage.removeItem(self.key, function(){});
+                                } else {
+                                    localforage.setItem(self.key, list, function(){});
+                                }
 
-                ++self.stats.removed;
+                                ++self.stats.removed;
+                            }
+                        });
+
+                    }
+                });
             },
 
             changed: function (newDoc, oldDoc) {
                 // update document in local storage
-                amplify.store(self._makeDataKey(newDoc._id), newDoc);
-                ++self.stats.changed;
+                localforage.setItem(self._makeDataKey(newDoc._id), newDoc, function(err, value) {
+                    if(!err) {
+                        ++self.stats.changed;
+                    }
+                });
             }
         });
     // });
@@ -118,40 +151,59 @@ PersistentMinimongo.prototype = {
     */
     refresh: function (init) {
         var self = this;
-        var list = amplify.store(self.key);
-        var dels = [];
+        localforage.getItem(self.key, function(err, list) {
+            if(!err) {
 
-        self.stats.added = 0;
+                self.stats.added = 0;
 
-        if (!! list) {
-            var length = list.length;
-            list = _.filter(list, function (id) {
-                var doc = amplify.store(self._makeDataKey(id));
-                if(!! doc) {
-                    var id = doc._id;
-                    delete doc._id;
-                    self.col.upsert({ _id: id}, doc);
+                if (!! list) {
+                    var length = list.length;
+                    var count = 0;
+                    var newList = [];
+                    _.each(list, function (id) {
+                        localforage.getItem(self._makeDataKey(id), function(err, doc) {
+                            if(!err) {
+                                if(!! doc) {
+                                    var id = doc._id;
+                                    delete doc._id;
+                                    self.col.upsert({ _id: id}, {$set: doc});
+
+                                    newList.push(id);
+                                }
+                            }
+                            count++;
+                        });
+                    });
+
+                    // do only after all items where checked
+                    var intervalId = setInterval(function() {
+                        if(count >= length) {
+                            clearInterval(intervalId);
+
+                            // if not initializing, check for deletes
+                            if(! init) {
+                            
+                                self.col.find({}).forEach(function (doc) {
+                                    if(! _.contains(newList, doc._id))
+                                        self.col.remove({ _id: doc._id });
+                                });
+                            }
+
+                            // if initializing, save cleaned list (if changed)
+                            if(init && length !== newList.length) {
+                                // if tracking list is empty, delete; else store updated copy
+                                if(newList.length === 0) {
+                                    localforage.removeItem(self.key, function(){});
+                                } else {
+                                    localforage.setItem(self.key, newList, function(){});
+                                }
+                            }
+                        }
+                    }, 10);
+
                 }
-
-                return !! doc;
-            });
-
-            // if not initializing, check for deletes
-            if(! init) {
-                self.col.find({}).forEach(function (doc) {
-                    if(! _.contains(list, doc._id))
-                        dels.push(doc._id);
-                });
-
-                _.each(dels, function (id) {
-                    self.col.remove({ _id: id });
-                });
             }
-
-            // if initializing, save cleaned list (if changed)
-            if(init && length != list.length)
-                amplify.store(self.key, list.length === 0 ? null : list);
-        }
+        });
     },
     /**
     Gets the current localstorage size in MB
@@ -201,13 +253,14 @@ var persisters = [];
 var lpTimer = null;
 
 // React on manual local storage changes
-Meteor.startup(function () {
-    $(window).bind('storage', function (e) {
-        Meteor.clearTimeout(lpTimer);
-        lpTimer = Meteor.setTimeout(function () {
-            _.each(persisters, function (lp) {
-                lp.refresh(false);
-            });
-        }, 250);
-    });
-});
+// Meteor.startup(function () {
+//     $(window).bind('storage', function (e) {
+//         console.log('STORAGE');
+//         Meteor.clearTimeout(lpTimer);
+//         lpTimer = Meteor.setTimeout(function () {
+//             _.each(persisters, function (lp) {
+//                 lp.refresh(false);
+//             });
+//         }, 250);
+//     });
+// });
