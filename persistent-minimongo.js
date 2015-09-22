@@ -37,7 +37,6 @@ PersistentMinimongo = function (collection, dbname) {
 
     self.key = 'minimongo__' + collection._name;
     self.col = collection;
-    self.cur = self.col.find({});
     self.stats = { added: 0, removed: 0, changed: 0 };
     self.list = [];
 
@@ -55,7 +54,7 @@ PersistentMinimongo = function (collection, dbname) {
     // load from storage
     self.refresh(true);
 
-    self.cur.observe({
+    self.col.find({}).observe({
         added: function (doc) {
 
             // Check if the localstorage is to big and reduce the current collection by 50 items
@@ -151,8 +150,14 @@ PersistentMinimongo.prototype = {
                             if(!err) {
                                 if(!! doc) {
                                     var id = doc._id;
-                                    delete doc._id;
-                                    self.col.upsert({ _id: id}, {$set: doc});
+                                    var foundDoc = self.col.findOne({_id: id});
+
+                                    if(foundDoc) {
+                                        delete doc._id;
+                                        self.col.update({_id: id}, {$set: doc});
+                                    } else {
+                                        id = self.col.insert(doc);
+                                    }
 
                                     newList.push(id);
                                 }
