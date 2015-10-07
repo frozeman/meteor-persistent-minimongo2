@@ -5,9 +5,9 @@ Packages
 */
 
 /**
-The PersistentMinimongo package
+The PersistentMinimongo2 package
 
-@class PersistentMinimongo
+@class PersistentMinimongo2
 @constructor
 */
 
@@ -30,10 +30,10 @@ var trimCollectionBy = 50;
 
 
 
-PersistentMinimongo = function (collection, dbname) {
+PersistentMinimongo2 = function (collection, dbname) {
     var self = this;
-    if (! (self instanceof PersistentMinimongo))
-            throw new Error('use "new" to construct a PersistentMinimongo');
+    if (! (self instanceof PersistentMinimongo2))
+            throw new Error('use "new" to construct a PersistentMinimongo2');
 
     self.key = 'minimongo__' + collection._name;
     self.col = collection;
@@ -116,8 +116,8 @@ PersistentMinimongo = function (collection, dbname) {
     });
 };
 
-PersistentMinimongo.prototype = {
-    constructor: PersistentMinimongo,
+PersistentMinimongo2.prototype = {
+    constructor: PersistentMinimongo2,
     _getStats: function () {
         return this.stats;
     },

@@ -23,7 +23,7 @@ Simple client-side observer class that provides persistence for Meteor Collectio
 ### Constructor
 
 ```
-new PersistentMinimongo(collection, 'myAppName');
+new PersistentMinimongo2(collection, 'myAppName');
 ```
 
 `collection` is the Meteor Collection to be persisted.
@@ -35,7 +35,7 @@ Default is `minimongo`
 
 ```js
 
-var myPersistentCollection = new PersistentMinimongo(collection, 'myAppName');
+var myPersistentCollection = new PersistentMinimongo2(collection, 'myAppName');
 
 // Refreshes the collections from the storage
 myPersistentCollection.refresh()
@@ -61,7 +61,7 @@ if (Meteor.isClient) {
     var shoppingCart = new Meteor.Collection('shopping-cart', {connection: null});
 
     // create a local persistence observer
-    var shoppingCartObserver = new PersistentMinimongo(shoppingCart, 'myShoppingApp');
+    var shoppingCartObserver = new PersistentMinimongo2(shoppingCart, 'myShoppingApp');
 
     // create a handlebars helper to fetch the data
     Template.registerHelper("shoppingCartItems", function () {
