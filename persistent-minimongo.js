@@ -63,11 +63,11 @@ PersistentMinimongo2 = function (collection, dbname) {
 
 
             // add document id to tracking list and store
-            if (! _.contains(self.list, doc._id)) {
-                self.list.push(doc._id);
+            if (!_.contains(self.list, doc._id)) {
 
                 self.store.setItem(self.key, self.list, function(err, value) {
                     if(!err) {
+                        self.list.push(doc._id);
 
                         // store copy of document into local storage, if not already there
                         var key = self._makeDataKey(doc._id);
@@ -82,16 +82,17 @@ PersistentMinimongo2 = function (collection, dbname) {
         },
 
         removed: function (doc) {
+            
             // if not in list, nothing to do
-            if(! _.contains(self.list, doc._id))
+            if(!_.contains(self.list, doc._id))
                 return;
 
-            // remove from list
-            self.list = _.without(self.list, doc._id);
 
             // remove document copy from local storage
             self.store.removeItem(self._makeDataKey(doc._id), function(err) {
                 if(!err) {
+                    // remove from list
+                    self.list = _.without(self.list, doc._id);
 
                     // if tracking list is empty, delete; else store updated copy
                     if(self.list.length === 0) {
@@ -171,24 +172,24 @@ PersistentMinimongo2.prototype = {
                         if(count >= length) {
                             clearInterval(intervalId);
 
-                            self.list = newList;
 
                             // if not initializing, check for deletes
                             if(! init) {
+                                self.list = newList;
                             
                                 self.col.find({}).forEach(function (doc) {
-                                    if(! _.contains(newList, doc._id))
+                                    if(! _.contains(self.list, doc._id))
                                         self.col.remove({ _id: doc._id });
                                 });
                             }
 
                             // if initializing, save cleaned list (if changed)
-                            if(init && length !== newList.length) {
+                            if(init && length !== self.list.length) {
                                 // if tracking list is empty, delete; else store updated copy
-                                if(newList.length === 0) {
+                                if(self.list.length === 0) {
                                     self.store.removeItem(self.key, function(){});
                                 } else {
-                                    self.store.setItem(self.key, newList, function(){});
+                                    self.store.setItem(self.key, self.list, function(){});
                                 }
                             }
                         }
