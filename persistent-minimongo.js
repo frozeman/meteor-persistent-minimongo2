@@ -64,10 +64,10 @@ PersistentMinimongo2 = function (collection, dbname) {
 
             // add document id to tracking list and store
             if (!_.contains(self.list, doc._id)) {
+                self.list.push(doc._id);
 
                 self.store.setItem(self.key, self.list, function(err, value) {
                     if(!err) {
-                        self.list.push(doc._id);
 
                         // store copy of document into local storage, if not already there
                         var key = self._makeDataKey(doc._id);
