@@ -4,7 +4,7 @@ var data = [
   { firstName: 'Max',    lastName: 'Planck',   email: 'max@mpg.de'              }
 ];
 var testCollection = new Mongo.Collection(null);
-var testObserver = new PersistentMinimongo(testCollection, 'persistent-minimongo-test');
+var testObserver = new PersistentMinimongo2(testCollection, 'persistent-minimongo-test');
 
 
 // test adding, retrieving and deleting data. the tests are a bit bogus since we can't
@@ -103,6 +103,6 @@ Tinytest.addAsync('Local Persist - Remove Data', function(test, done) {
 
       done();
     });
-  }, 200);
+  }, 300);
   
 });
