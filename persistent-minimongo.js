@@ -66,18 +66,16 @@ PersistentMinimongo2 = function (collection, dbname) {
             if (!_.contains(self.list, doc._id)) {
                 self.list.push(doc._id);
 
-                self.store.setItem(self.key, self.list, function(err, value) {
+                // store copy of document into db, if not already there
+                var key = self._makeDataKey(doc._id);
+                self.store.setItem(key, doc, function(err, value) {
                     if(!err) {
-
-                        // store copy of document into local storage, if not already there
-                        var key = self._makeDataKey(doc._id);
-                        self.store.setItem(key, doc, function(err, value) {
-                            if(!err) {
-                                ++self.stats.added;
-                            }
-                        });
+                        ++self.stats.added;
                     }
                 });
+
+                // update the list
+                self.store.setItem(self.key, self.list, function(err, value) {});
             }
         },
 
@@ -91,19 +89,20 @@ PersistentMinimongo2 = function (collection, dbname) {
             // remove document copy from local storage
             self.store.removeItem(self._makeDataKey(doc._id), function(err) {
                 if(!err) {
-                    // remove from list
-                    self.list = _.without(self.list, doc._id);
-
-                    // if tracking list is empty, delete; else store updated copy
-                    if(self.list.length === 0) {
-                        self.store.removeItem(self.key, function(){});
-                    } else {
-                        self.store.setItem(self.key, self.list, function(){});
-                    }
-
                     ++self.stats.removed;
                 }
             });
+
+            // remove from list
+            self.list = _.without(self.list, doc._id);
+
+            // if tracking list is empty, delete; else store updated copy
+            if(self.list.length === 0) {
+                self.store.removeItem(self.key, function(){});
+            } else {
+                self.store.setItem(self.key, self.list, function(){});
+            }
+
         },
 
         changed: function (newDoc, oldDoc) {
@@ -172,10 +171,10 @@ PersistentMinimongo2.prototype = {
                         if(count >= length) {
                             clearInterval(intervalId);
 
+                            self.list = newList;
 
                             // if not initializing, check for deletes
                             if(! init) {
-                                self.list = newList;
                             
                                 self.col.find({}).forEach(function (doc) {
                                     if(! _.contains(self.list, doc._id))
