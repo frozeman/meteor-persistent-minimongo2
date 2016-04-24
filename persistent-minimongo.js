@@ -1,3 +1,5 @@
+import localforage from 'localforage'
+
 /**
 Packages
 
@@ -30,7 +32,7 @@ var trimCollectionBy = 50;
 
 
 
-PersistentMinimongo2 = function (collection, dbname) {
+export default PersistentMinimongo2 = function (collection, dbname) {
     var self = this;
     if (! (self instanceof PersistentMinimongo2))
             throw new Error('use "new" to construct a PersistentMinimongo2');
