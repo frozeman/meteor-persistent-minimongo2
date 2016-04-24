@@ -1,3 +1,5 @@
+import PersistentMinimongo2 from 'meteor/frozeman:persistent-minimongo2'
+
 var data = [
   { firstName: 'Albert', lastName: 'Einstein', email: 'emc2@princeton.edu'      },
   { firstName: 'Marie',  lastName: 'Curie',    email: 'marie.curie@sorbonne.fr' },
