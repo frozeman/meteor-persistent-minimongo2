@@ -30,7 +30,7 @@ var trimCollectionBy = 50;
 
 
 
-PersistentMinimongo2 = function (collection, dbname) {
+PersistentMinimongo2 = function (collection, dbname, afterInitialisationCallback) {
     var self = this;
     if (! (self instanceof PersistentMinimongo2))
             throw new Error('use "new" to construct a PersistentMinimongo2');
@@ -52,7 +52,7 @@ PersistentMinimongo2 = function (collection, dbname) {
     });
 
     // load from storage
-    self.refresh(true);
+    self.refresh(true, afterInitialisationCallback);
 
     self.col.find({}).observe({
         added: function (doc) {
@@ -133,7 +133,7 @@ PersistentMinimongo2.prototype = {
     @method refresh
     @return {String}
     */
-    refresh: function (init) {
+    refresh: function (init, afterRefreshCallback) {
         var self = this;
         self.store.getItem(self.key, function(err, list) {
             if(!err) {
@@ -191,9 +191,19 @@ PersistentMinimongo2.prototype = {
                                     self.store.setItem(self.key, self.list, function(){});
                                 }
                             }
+                            if (afterRefreshCallback) {
+                                afterRefreshCallback();
+                            }
                         }
                     }, 1);
-
+                } else {
+                    if (afterRefreshCallback) {
+                        afterRefreshCallback();
+                    }
+                }
+            } else {
+                if (afterRefreshCallback) {
+                    afterRefreshCallback();
                 }
             }
         });
