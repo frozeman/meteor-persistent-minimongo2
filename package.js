@@ -1,7 +1,7 @@
 Package.describe({
   name: 'frozeman:persistent-minimongo2',
   summary: 'Persistent Client-side Collections for Meteor using indexedDB, webSQL or localstorage',
-  version: '0.3.5',
+  version: '0.4.0',
   git: 'http://github.com/frozeman/meteor-persistent-minimongo'
 });
 
