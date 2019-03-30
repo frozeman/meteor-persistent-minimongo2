@@ -1,3 +1,4 @@
+import localforage from 'localforage'
 /**
 Packages
 
@@ -80,7 +81,7 @@ PersistentMinimongo2 = function (collection, dbname, afterInitialisationCallback
         },
 
         removed: function (doc) {
-            
+
             // if not in list, nothing to do
             if(!_.contains(self.list, doc._id))
                 return;
@@ -129,7 +130,7 @@ PersistentMinimongo2.prototype = {
     },
     /**
     Refresh the local storage
-    
+
     @method refresh
     @return {String}
     */
@@ -175,7 +176,7 @@ PersistentMinimongo2.prototype = {
 
                             // if not initializing, check for deletes
                             if(! init) {
-                            
+
                                 self.col.find({}).forEach(function (doc) {
                                     if(! _.contains(self.list, doc._id))
                                         self.col.remove({ _id: doc._id });
@@ -210,7 +211,7 @@ PersistentMinimongo2.prototype = {
     },
     /**
     Gets the current localstorage size in MB
-    
+
     @method localStorageSize
     @return {String} total localstorage size in MB
     */
@@ -235,7 +236,7 @@ PersistentMinimongo2.prototype = {
     },
     /**
     Check if the localstorage is to big and reduce the current collection by 50 items
-    
+
     @method localStorageSize
     @return {String}
     */
