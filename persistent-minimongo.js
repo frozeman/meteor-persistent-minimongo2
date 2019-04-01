@@ -43,15 +43,17 @@ PersistentMinimongo2 = function (collection, dbname, afterInitialisationCallback
 
     persisters.push(self);
 
+
+
     // config
     self.store = localforage.createInstance({
+        driver      : window.openDatabase ? localforage.WEBSQL : localforage.INDEXEDDB,
         name        : 'persistent-minimongo2-' + (dbname || 'db'),
         version     : 1.0,
         // size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
         storeName   : 'minimongo',
         description : 'frozeman:persistent-minimongo2 data store'
     });
-
     // load from storage
     self.refresh(true, afterInitialisationCallback);
 
