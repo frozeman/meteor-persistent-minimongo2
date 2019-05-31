@@ -119,6 +119,8 @@ PersistentMinimongo2 = function (collection, dbname, afterInitialisationCallback
     });
 };
 
+export PersistentMinimongo2
+
 PersistentMinimongo2.prototype = {
     constructor: PersistentMinimongo2,
     _getStats: function () {
@@ -256,17 +258,3 @@ PersistentMinimongo2.prototype = {
 };
 
 var persisters = [];
-var lpTimer = null;
-
-// React on manual local storage changes
-// Meteor.startup(function () {
-//     $(window).bind('storage', function (e) {
-//         console.log('STORAGE');
-//         Meteor.clearTimeout(lpTimer);
-//         lpTimer = Meteor.setTimeout(function () {
-//             _.each(persisters, function (lp) {
-//                 lp.refresh(false);
-//             });
-//         }, 250);
-//     });
-// });
