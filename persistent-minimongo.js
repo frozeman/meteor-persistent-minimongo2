@@ -119,8 +119,6 @@ PersistentMinimongo2 = function (collection, dbname, afterInitialisationCallback
     });
 };
 
-export PersistentMinimongo2
-
 PersistentMinimongo2.prototype = {
     constructor: PersistentMinimongo2,
     _getStats: function () {
