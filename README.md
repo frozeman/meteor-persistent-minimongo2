@@ -1,21 +1,19 @@
 # Meteor persistent minimongo
 
+It seems that frozeman/meteor-persistent-minimongo2 is unmaintained.
+
+
 Simple client-side observer class that provides persistence for Meteor Collections using browser storage via [localforage](https://github.com/mozilla/localForage).
 
 [localforage](https://github.com/mozilla/localForage) uses the browsers `indexedDB`, if not available tries `webSQL` and as last option uses `localstorage`.
 
 *package based on [meteor-local-persist](https://github.com/jeffmitchel/meteor-local-persist) by Jeff Mitchel*
-
-## Notes
-
-- If you UPDATE from 1.x.x, be aware that you will loose your stored data, as its now stored in the browsers indexedDB if available.
-- The cross-tab reactvity is gone since version 2.0.0, as its not using localstorage anymore !!
-- This is a simple implementation that keeps an identical copy of the collection's data in browser storage. While not especially space efficient, it does preserve all of the Meteor.Collection reactive goodness.
+*package based on [meteor-local-persist](https://github.com/jeffmitchel/meteor-local-persist) by Jeff Mitchel*
 
 
 ## Installation
 
-`$ meteor add frozeman:persistent-minimongo2`
+`$ meteor add hacknlove:persistent-minimongo2`
 
 
 ## Documentation
@@ -34,8 +32,7 @@ Default is `minimongo`
 ### Methods:
 
 ```js
-
-var myPersistentCollection = new PersistentMinimongo2(collection, 'myAppName');
+var myPersistentCollection = new PersistentMinimongo2(collection, 'myAppName', afterInitialisationCallback);
 
 // Refreshes the collections from the storage
 myPersistentCollection.refresh()
@@ -57,8 +54,8 @@ Implement a simple shopping cart as a local collection.
 
 ```js
 if (Meteor.isClient) {
-    // create a local collection, 
-    var shoppingCart = new Meteor.Collection('shopping-cart', {connection: null});
+    // create a local collection,
+    var shoppingCart = new Meteor.Collection('shopping-cart', null);
 
     // create a local persistence observer
     var shoppingCartObserver = new PersistentMinimongo2(shoppingCart, 'myShoppingApp');

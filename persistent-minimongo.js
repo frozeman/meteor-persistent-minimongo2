@@ -1,3 +1,4 @@
+import localforage from 'localforage'
 /**
 Packages
 
@@ -42,15 +43,17 @@ PersistentMinimongo2 = function (collection, dbname, afterInitialisationCallback
 
     persisters.push(self);
 
+
+
     // config
     self.store = localforage.createInstance({
+        driver      : window.openDatabase ? localforage.WEBSQL : localforage.INDEXEDDB,
         name        : 'persistent-minimongo2-' + (dbname || 'db'),
         version     : 1.0,
         // size        : 4980736, // Size of database, in bytes. WebSQL-only for now.
         storeName   : 'minimongo',
         description : 'frozeman:persistent-minimongo2 data store'
     });
-
     // load from storage
     self.refresh(true, afterInitialisationCallback);
 
@@ -80,7 +83,7 @@ PersistentMinimongo2 = function (collection, dbname, afterInitialisationCallback
         },
 
         removed: function (doc) {
-            
+
             // if not in list, nothing to do
             if(!_.contains(self.list, doc._id))
                 return;
@@ -129,7 +132,7 @@ PersistentMinimongo2.prototype = {
     },
     /**
     Refresh the local storage
-    
+
     @method refresh
     @return {String}
     */
@@ -175,7 +178,7 @@ PersistentMinimongo2.prototype = {
 
                             // if not initializing, check for deletes
                             if(! init) {
-                            
+
                                 self.col.find({}).forEach(function (doc) {
                                     if(! _.contains(self.list, doc._id))
                                         self.col.remove({ _id: doc._id });
@@ -210,7 +213,7 @@ PersistentMinimongo2.prototype = {
     },
     /**
     Gets the current localstorage size in MB
-    
+
     @method localStorageSize
     @return {String} total localstorage size in MB
     */
@@ -235,7 +238,7 @@ PersistentMinimongo2.prototype = {
     },
     /**
     Check if the localstorage is to big and reduce the current collection by 50 items
-    
+
     @method localStorageSize
     @return {String}
     */
@@ -253,17 +256,3 @@ PersistentMinimongo2.prototype = {
 };
 
 var persisters = [];
-var lpTimer = null;
-
-// React on manual local storage changes
-// Meteor.startup(function () {
-//     $(window).bind('storage', function (e) {
-//         console.log('STORAGE');
-//         Meteor.clearTimeout(lpTimer);
-//         lpTimer = Meteor.setTimeout(function () {
-//             _.each(persisters, function (lp) {
-//                 lp.refresh(false);
-//             });
-//         }, 250);
-//     });
-// });
